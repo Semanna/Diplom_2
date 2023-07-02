@@ -1,12 +1,15 @@
+package steps;
+
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import model.User;
+import org.apache.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;
 
 public class UserSteps {
     @Step("Создание Пользователя")
-    public static Response create(User user) {
+    public static Response createUser(User user) {
         return given()
                 .header("Content-type", "application/json")
                 .and()
@@ -26,7 +29,7 @@ public class UserSteps {
     }
 
     @Step("Изменение Пользователя")
-    public static Response change(User user, String token) {
+    public static Response changeUser(User user, String token) {
         return given()
                 .header("Content-type", "application/json")
                 .header("authorization", token)
@@ -36,7 +39,7 @@ public class UserSteps {
                 .patch("api/auth/user");
     }
 
-    public static void delete(String tokenToDelete) {
+    public static void deleteUser(String tokenToDelete) {
         given()
                 .header("Content-type", "application/json")
                 .header("authorization", tokenToDelete)
@@ -46,6 +49,6 @@ public class UserSteps {
                 .delete("api/auth/user")
                 .then()
                 .assertThat()
-                .statusCode(202);
+                .statusCode(HttpStatus.SC_ACCEPTED);
     }
 }

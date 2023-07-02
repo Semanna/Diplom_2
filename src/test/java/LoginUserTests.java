@@ -1,28 +1,23 @@
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.RegisterResponse;
 import model.User;
+import org.apache.http.HttpStatus;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import steps.UserSteps;
 
 import static org.junit.Assert.*;
 
-public class LoginUserTests {
+public class LoginUserTests extends BaseTest {
 
     private String tokenToDelete;
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
-    }
 
     @After
     public void clean() {
         if (tokenToDelete != null) {
-            UserSteps.delete(tokenToDelete);
+            UserSteps.deleteUser(tokenToDelete);
             tokenToDelete = null;
         }
     }
@@ -36,12 +31,12 @@ public class LoginUserTests {
         create(user)
                 .then()
                 .assertThat()
-                .statusCode(200);
+                .statusCode(HttpStatus.SC_OK);
 
         RegisterResponse response = UserSteps.login(user)
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(RegisterResponse.class);
 
         assertTrue(response.isSuccess());
@@ -60,7 +55,7 @@ public class LoginUserTests {
         RegisterResponse response = UserSteps.login(user)
                 .then()
                 .assertThat()
-                .statusCode(401)
+                .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .extract().as(RegisterResponse.class);
 
         assertFalse(response.isSuccess());
@@ -70,9 +65,9 @@ public class LoginUserTests {
     }
 
     private Response create(User user) {
-        Response response = UserSteps.create(user);
+        Response response = UserSteps.createUser(user);
 
-        if (response.getStatusCode() == 200) {
+        if (response.getStatusCode() == HttpStatus.SC_OK) {
             tokenToDelete = response
                     .then()
                     .extract().as(RegisterResponse.class).getAccessToken();

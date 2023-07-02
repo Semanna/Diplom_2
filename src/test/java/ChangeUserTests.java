@@ -1,31 +1,26 @@
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.RegisterResponse;
 import model.User;
+import org.apache.http.HttpStatus;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import steps.UserSteps;
 
 import static org.junit.Assert.*;
 
-public class ChangeUserTests {
+public class ChangeUserTests extends BaseTest {
 
     private String tokenToDelete;
 
     private static final String NEW_NAME = "New Name";
     private static final String NEW_EMAIL = "new@email";
 
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
-    }
-
     @After
     public void clean() {
         if (tokenToDelete != null) {
-            UserSteps.delete(tokenToDelete);
+            UserSteps.deleteUser(tokenToDelete);
             tokenToDelete = null;
         }
     }
@@ -39,15 +34,15 @@ public class ChangeUserTests {
         RegisterResponse createResponse = create(user)
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(RegisterResponse.class);
 
         user.setEmail(NEW_EMAIL);
 
-        RegisterResponse response = UserSteps.change(user, createResponse.getAccessToken())
+        RegisterResponse response = UserSteps.changeUser(user, createResponse.getAccessToken())
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(RegisterResponse.class);
 
         assertTrue(response.isSuccess());
@@ -63,15 +58,15 @@ public class ChangeUserTests {
         RegisterResponse createResponse = create(user)
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(RegisterResponse.class);
 
         user.setName(NEW_NAME);
 
-        RegisterResponse response = UserSteps.change(user, createResponse.getAccessToken())
+        RegisterResponse response = UserSteps.changeUser(user, createResponse.getAccessToken())
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(RegisterResponse.class);
 
         assertTrue(response.isSuccess());
@@ -84,10 +79,10 @@ public class ChangeUserTests {
     public void shouldNotChangeUser() {
         User user = User.random();
 
-        RegisterResponse response = UserSteps.change(user, "")
+        RegisterResponse response = UserSteps.changeUser(user, "")
                 .then()
                 .assertThat()
-                .statusCode(401)
+                .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .extract().as(RegisterResponse.class);
 
         assertFalse(response.isSuccess());
@@ -95,9 +90,9 @@ public class ChangeUserTests {
     }
 
     private Response create(User user) {
-        Response response = UserSteps.create(user);
+        Response response = UserSteps.createUser(user);
 
-        if (response.getStatusCode() == 200) {
+        if (response.getStatusCode() == HttpStatus.SC_OK) {
             tokenToDelete = response
                     .then()
                     .extract().as(RegisterResponse.class).getAccessToken();

@@ -1,8 +1,11 @@
+package steps;
+
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import model.CreateOrder;
 import model.Ingredient;
 import model.Ingredients;
+import org.apache.http.HttpStatus;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,7 +14,7 @@ import static io.restassured.RestAssured.given;
 
 public class OrderSteps {
     @Step("Создание Заказа")
-    public static Response create(CreateOrder createOrder, String token) {
+    public static Response createOrder(CreateOrder createOrder, String token) {
         return given()
                 .header("Content-type", "application/json")
                 .header("authorization", token)
@@ -22,7 +25,7 @@ public class OrderSteps {
     }
 
     @Step("Получение Заказов")
-    public static Response get(String token) {
+    public static Response getOrder(String token) {
         return given()
                 .header("Content-type", "application/json")
                 .header("authorization", token)
@@ -32,10 +35,10 @@ public class OrderSteps {
 
     @Step("Подготовка запроса на создание заказа")
     public static CreateOrder getOrderWithSomeIngredients() {
-        Ingredients ingredients = IngredientSteps.get()
+        Ingredients ingredients = IngredientSteps.getIngredients()
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(Ingredients.class);
 
         CreateOrder createOrder = new CreateOrder();

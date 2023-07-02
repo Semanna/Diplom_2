@@ -1,27 +1,23 @@
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import model.*;
+import org.apache.http.HttpStatus;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import steps.OrderSteps;
+import steps.UserSteps;
 
 import static org.junit.Assert.*;
 
-public class GetOrderTests {
+public class GetOrderTests extends BaseTest {
 
     private String tokenToDelete;
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "https://stellarburgers.nomoreparties.site";
-    }
 
     @After
     public void clean() {
         if (tokenToDelete != null) {
-            UserSteps.delete(tokenToDelete);
+            UserSteps.deleteUser(tokenToDelete);
             tokenToDelete = null;
         }
     }
@@ -35,20 +31,20 @@ public class GetOrderTests {
         RegisterResponse createUserResponse = create(user)
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(RegisterResponse.class);
 
         CreateOrder createOrder = OrderSteps.getOrderWithSomeIngredients();
 
-        OrderSteps.create(createOrder, createUserResponse.getAccessToken())
+        OrderSteps.createOrder(createOrder, createUserResponse.getAccessToken())
                 .then()
                 .assertThat()
-                .statusCode(200);
+                .statusCode(HttpStatus.SC_OK);
 
-        GetOrdersResponse response = OrderSteps.get(createUserResponse.getAccessToken())
+        GetOrdersResponse response = OrderSteps.getOrder(createUserResponse.getAccessToken())
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .extract().as(GetOrdersResponse.class);
 
         assertTrue(response.isSuccess());
@@ -70,10 +66,10 @@ public class GetOrderTests {
     @DisplayName("Позучение заказов без авторизации")
     @Description("Ошибка получения заказов")
     public void shouldNotReturnOrderWithoutAuthorization() {
-        GetOrdersResponse response = OrderSteps.get("")
+        GetOrdersResponse response = OrderSteps.getOrder("")
                 .then()
                 .assertThat()
-                .statusCode(401)
+                .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .extract().as(GetOrdersResponse.class);
 
         assertFalse(response.isSuccess());
@@ -81,9 +77,9 @@ public class GetOrderTests {
     }
 
     private Response create(User user) {
-        Response response = UserSteps.create(user);
+        Response response = UserSteps.createUser(user);
 
-        if (response.getStatusCode() == 200) {
+        if (response.getStatusCode() == HttpStatus.SC_OK) {
             tokenToDelete = response
                     .then()
                     .extract().as(RegisterResponse.class).getAccessToken();
